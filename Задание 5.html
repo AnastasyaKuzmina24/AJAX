@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Fetcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .submit-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .error {
+            color: red;
+        }
+        .images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .images img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-group">
+            <label for="page">Номер страницы:</label>
+            <input type="text" id="page" name="page">
+        </div>
+        <div class="input-group">
+            <label for="limit">Лимит:</label>
+            <input type="text" id="limit" name="limit">
+        </div>
+        <button class="submit-button" onclick="handleSubmit()">Запрос</button>
+        <div class="result" id="result"></div>
+        <div class="images" id="images"></div>
+    </div>
+
+    <script>
+        function handleSubmit() {
+            const pageInput = document.getElementById('page').value;
+            const limitInput = document.getElementById('limit').value;
+            const resultDiv = document.getElementById('result');
+            const imagesDiv = document.getElementById('images');
+
+            const page = parseFloat(pageInput);
+            const limit = parseFloat(limitInput);
+
+            resultDiv.innerHTML = '';
+            imagesDiv.innerHTML = '';
+
+            if (isNaN(page) || page < 1 || page > 10) {
+                if (isNaN(limit) || limit < 1 || limit > 10) {
+                    resultDiv.innerHTML = 'Номер страницы и лимит вне диапазона от 1 до 10';
+                } else {
+                    resultDiv.innerHTML = 'Номер страницы вне диапазона от 1 до 10';
+                }
+                resultDiv.classList.add('error');
+                return;
+            }
+
+            if (isNaN(limit) || limit < 1 || limit > 10) {
+                resultDiv.innerHTML = 'Лимит вне диапазона от 1 до 10';
+                resultDiv.classList.add('error');
+                return;
+            }
+
+            const url = `https://jsonplaceholder.typicode.com/photos?_page=${page}&_limit=${limit}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    localStorage.setItem('images', JSON.stringify(data));
+                    displayImages(data);
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = 'Ошибка при загрузке изображений';
+                    resultDiv.classList.add('error');
+                });
+        }
+
+        function displayImages(images) {
+            const imagesDiv = document.getElementById('images');
+            imagesDiv.innerHTML = '';
+            images.forEach(image => {
+                const img = document.createElement('img');
+                img.src = image.thumbnailUrl;
+                imagesDiv.appendChild(img);
+            });
+        }
+
+        window.onload = function() {
+            const savedImages = localStorage.getItem('images');
+            if (savedImages) {
+                const images = JSON.parse(savedImages);
+                displayImages(images);
+            }
+        };
+    </script>
+</body>
+</html>
